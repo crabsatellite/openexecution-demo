@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Recording outputs (large binary files)
+recording/
+artifacts/
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# PRIVATE: Real implementation with proprietary algorithms
+# Use live-demo.public.js (committed) for public-facing version
+live-demo.js
+run-demo.js
+playwright-demo.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

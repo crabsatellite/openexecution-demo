@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OpenExecution — Live Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--br:#30363d;--t1:#e6edf3;--t2:#8b949e;
+--blue:#58a6ff;--green:#3fb950;--orange:#f0883e;--red:#f85149;--purple:#bc8cff}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.mono{font-family:'Cascadia Code','JetBrains Mono','Fira Code',Consolas,monospace}
+
+/* Intro */
+.intro{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+align-items:center;justify-content:center;z-index:200;transition:opacity .6s ease}
+.intro.hidden{opacity:0;pointer-events:none}
+.intro-logo{font-size:36px;font-weight:800;color:var(--blue);letter-spacing:-1px;margin-bottom:8px}
+.intro-logo span{color:var(--green)}
+.intro-sub{font-size:16px;color:var(--t2);margin-bottom:32px}
+.intro-status{font-size:14px;color:var(--t2);display:flex;align-items:center;gap:8px}
+.intro-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.2s infinite}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;
+background:var(--bg2);border-bottom:1px solid var(--br);min-height:48px}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo{font-size:17px;font-weight:700;color:var(--blue)}.logo span{color:var(--green)}
+.title{font-size:13px;color:var(--t2);border-left:1px solid var(--br);padding-left:14px}
+.step-badge{background:var(--bg3);border:1px solid var(--br);border-radius:16px;padding:4px 14px;font-size:12px;font-weight:600}
+
+/* Progress */
+.progress-wrap{height:3px;background:var(--bg3)}
+.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .8s ease}
+
+/* Main Layout */
+.main{flex:1;display:flex;overflow:hidden}
+.panel{display:flex;flex-direction:column;overflow:hidden}
+.panel-hdr{padding:8px 18px;font-size:11px;font-weight:600;text-transform:uppercase;
+letter-spacing:1.5px;color:var(--t2);background:var(--bg2);border-bottom:1px solid var(--br)}
+.panel-body{flex:1;overflow-y:auto;padding:12px 14px;scroll-behavior:smooth}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-track{background:transparent}
+.panel-body::-webkit-scrollbar-thumb{background:var(--br);border-radius:2px}
+.activity{flex:3;border-right:1px solid var(--br)}
+.ledger{flex:2}
+
+/* Messages */
+.msg{margin-bottom:10px;padding:10px 14px;border-radius:6px;background:var(--bg2);
+border-left:3px solid var(--br);animation:slideL .4s ease}
+.msg.sys{border-left-color:var(--t2);background:transparent;padding:6px 14px;font-size:12px;color:var(--t2)}
+.msg.agent{border-left-color:var(--blue)}
+.msg.ai{border-left-color:var(--green)}
+.msg.human{border-left-color:var(--orange)}
+.msg.liability{border-left-color:var(--red);background:rgba(248,81,73,.06)}
+.msg-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.msg-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+justify-content:center;font-size:12px;flex-shrink:0}
+.msg-icon.ic-agent{background:var(--blue);color:#fff}
+.msg-icon.ic-ai{background:var(--green);color:#fff}
+.msg-icon.ic-human{background:var(--orange);color:#fff}
+.msg-name{font-size:13px;font-weight:600;color:var(--t1)}
+.msg-org{font-size:10px;color:var(--t2);background:var(--bg3);padding:1px 6px;border-radius:3px}
+.liability-tag{font-size:9px;font-weight:700;background:var(--red);color:#fff;
+padding:2px 6px;border-radius:3px;letter-spacing:.5px}
+.msg-text{font-size:13px;line-height:1.55;color:var(--t1)}
+.cursor{display:inline-block;width:2px;height:13px;background:var(--green);
+margin-left:2px;animation:blink .7s infinite;vertical-align:middle}
+
+/* Chain Events */
+.cev{position:relative;margin-bottom:6px;padding:8px 12px;border-radius:5px;
+background:var(--bg2);border:1px solid var(--br);animation:slideR .4s ease}
+.cev::before{content:'';position:absolute;left:18px;top:-6px;height:6px;width:2px;background:var(--br)}
+.cev:first-child::before{display:none}
+.cev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.cev-seq{font-size:11px;font-weight:700;color:var(--purple)}
+.cev-type{font-size:12px;font-weight:600}
+.cev-agent{font-size:11px;color:var(--t2)}
+.cev-hash{font-size:10px;color:var(--blue);opacity:.8;margin-top:3px}
+.cev-link{font-size:9px;color:var(--t2);opacity:.5}
+
+/* Status Bar */
+.status-bar{display:flex;align-items:center;justify-content:center;gap:20px;
+padding:8px 24px;background:var(--bg2);border-top:1px solid var(--br);font-size:12px;flex-wrap:wrap}
+.st{display:flex;align-items:center;gap:5px;color:var(--t2);transition:color .3s}
+.st.active{color:var(--orange)}.st.done{color:var(--green)}
+.st-dot{width:7px;height:7px;border-radius:50%;background:var(--br);transition:background .3s}
+.st.active .st-dot{background:var(--orange);animation:pulse 1s infinite}
+.st.done .st-dot{background:var(--green)}
+
+/* Step Overlay */
+.step-ov{position:fixed;inset:0;background:rgba(13,17,23,.92);display:none;
+align-items:center;justify-content:center;flex-direction:column;z-index:50}
+.step-ov.vis{display:flex;animation:fadeIn .3s ease}
+.step-ov .snum{font-size:13px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.step-ov .stitle{font-size:26px;font-weight:700}
+
+/* Cert Overlay */
+.cert-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;
+align-items:center;justify-content:center;z-index:100}
+.cert-ov.vis{display:flex;animation:fadeIn .5s ease}
+.cert-card{background:var(--bg2);border:2px solid var(--green);border-radius:14px;
+padding:28px 36px;max-width:560px;width:90%;text-align:center;
+box-shadow:0 0 60px rgba(63,185,80,.15);animation:certIn .5s ease}
+.cert-icon{font-size:44px;margin-bottom:12px}
+.cert-title{font-size:18px;font-weight:700;color:var(--green);margin-bottom:6px}
+.cert-detail{font-size:12px;color:var(--t2);margin-bottom:3px}
+.cert-hash{font-size:11px;color:var(--blue);background:var(--bg);
+padding:8px 10px;border-radius:5px;margin:10px 0;word-break:break-all}
+.cert-valid{font-size:16px;font-weight:700;margin-top:14px}
+
+/* Done Banner */
+.done-banner{display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);
+background:var(--green);color:#000;font-weight:700;font-size:15px;
+padding:10px 28px;border-radius:8px;z-index:60;animation:fadeIn .5s ease}
+.done-banner.vis{display:block}
+
+/* Animations */
+@keyframes slideL{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideR{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes certIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+
+/* Instruction Input Bar */
+.instr-bar{display:none;padding:12px 14px;background:var(--bg2);border-top:2px solid var(--red);
+flex-direction:column;gap:8px;animation:slideL .4s ease}
+.instr-bar.vis{display:flex}
+.instr-label{font-size:12px;font-weight:700;color:var(--red)}
+.instr-input{background:var(--bg);border:1px solid var(--br);border-radius:6px;color:var(--t1);
+padding:10px 12px;font-size:13px;line-height:1.5;resize:none;outline:none;
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:border-color .2s}
+.instr-input:focus{border-color:var(--orange)}
+.instr-btn{background:var(--red);color:#fff;border:none;border-radius:6px;
+padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;align-self:flex-end;
+transition:background .2s;letter-spacing:.3px}
+.instr-btn:hover{background:#da3633}
+.instr-btn:disabled{opacity:.5;cursor:default}
+.instr-sent{font-size:12px;color:var(--green);font-weight:600;padding:8px 0;display:none}
+</style>
+</head>
+<body>
+
+<div class="intro" id="intro">
+  <div class="intro-logo"><span>&#9670;</span> OPENEXECUTION</div>
+  <div class="intro-sub">The Execution Ledger for Autonomous AI Agents</div>
+  <div class="intro-status"><div class="intro-dot"></div> Connecting to live demo...</div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo"><span>&#9670;</span> OPENEXECUTION</div>
+    <div class="title">Execution Ledger &mdash; Live Demo</div>
+  </div>
+  <div class="step-badge" id="step-badge">Initializing...</div>
+</div>
+<div class="progress-wrap"><div class="progress-bar" id="pbar"></div></div>
+
+<div class="main">
+  <div class="panel activity">
+    <div class="panel-hdr">Agent Activity</div>
+    <div class="panel-body" id="msgs"></div>
+    <div class="instr-bar" id="instr-bar">
+      <div class="instr-label">&#9888; Human Authorization Required — Enter your instruction:</div>
+      <textarea class="instr-input" id="instr-input" rows="2" placeholder="Type your instruction to the agent..."></textarea>
+      <button class="instr-btn" id="instr-btn" onclick="submitInstruction()">Authorize &amp; Send Instruction</button>
+    </div>
+  </div>
+  <div class="panel ledger">
+    <div class="panel-hdr">Provenance Chain</div>
+    <div class="panel-body" id="chain"></div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="st" id="st-repo"><span class="st-dot"></span> Repository</div>
+  <div class="st" id="st-issue"><span class="st-dot"></span> Issue</div>
+  <div class="st" id="st-pr"><span class="st-dot"></span> Pull Request</div>
+  <div class="st" id="st-review"><span class="st-dot"></span> Review</div>
+  <div class="st" id="st-merge"><span class="st-dot"></span> Merge</div>
+  <div class="st" id="st-cert"><span class="st-dot"></span> Certificate</div>
+  <div class="st" id="st-verify"><span class="st-dot"></span> Verification</div>
+</div>
+
+<div class="step-ov" id="stepov">
+  <div class="snum" id="ov-num"></div>
+  <div class="stitle" id="ov-title"></div>
+</div>
+
+<div class="cert-ov" id="certov">
+  <div class="cert-card">
+    <div class="cert-icon">&#128274;</div>
+    <div class="cert-title">Execution Certificate Issued</div>
+    <div class="cert-detail" id="c-issuer"></div>
+    <div class="cert-detail" id="c-events"></div>
+    <div class="cert-hash mono" id="c-hash"></div>
+    <div class="cert-detail mono" id="c-sig"></div>
+    <div class="cert-valid" id="c-valid"></div>
+  </div>
+</div>
+
+<div class="done-banner" id="done-banner">&#10003; Demo Complete &mdash; All Provenance Artifacts Committed</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const msgs=$('msgs'), chain=$('chain'), pbar=$('pbar'), intro=$('intro');
+let introShown=true;
+
+function connectSSE(){
+  const es=new EventSource('/events');
+  es.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    if(introShown&&d.type!=='ping'){intro.classList.add('hidden');introShown=false}
+    switch(d.type){
+      case'step':doStep(d);break;
+      case'msg':doMsg(d);break;
+      case'chain':doChain(d);break;
+      case'status':doStatus(d);break;
+      case'cert':doCert(d);break;
+      case'verify':doVerify(d);break;
+      case'hide_cert':$('certov').classList.remove('vis');break;
+      case'done':$('done-banner').classList.add('vis');break;
+      case'await_instruction':showInstrBar();break;
+      case'instruction_ack':hideInstrBar();break;
+    }
+  };
+  es.onerror=()=>{es.close();setTimeout(connectSSE,2000)};
+}
+connectSSE();
+
+function showInstrBar(){$('instr-bar').classList.add('vis');$('instr-input').focus()}
+function hideInstrBar(){$('instr-bar').classList.remove('vis')}
+function submitInstruction(){
+  const text=$('instr-input').value.trim();
+  if(!text)return;
+  const btn=$('instr-btn');btn.disabled=true;btn.textContent='Sending...';
+  fetch('/instruction',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({instruction:text})})
+    .then(()=>{btn.textContent='Sent';})
+    .catch(()=>{btn.disabled=false;btn.textContent='Retry'});
+}
+
+function doStep(d){
+  $('step-badge').textContent='Act '+d.act+' of 7';
+  pbar.style.width=(d.act/7*100)+'%';
+  $('ov-num').textContent='ACT '+d.act;
+  $('ov-title').textContent=d.title;
+  const ov=$('stepov');ov.classList.add('vis');
+  setTimeout(()=>ov.classList.remove('vis'),2000);
+}
+
+function doMsg(d){
+  const div=document.createElement('div');
+  let cls='msg',icCls='msg-icon',icon='';
+  if(d.kind==='sys'){cls+=' sys'}
+  else if(d.kind==='ai'){cls+=' ai';icCls+=' ic-ai';icon='&#129504;'}
+  else if(d.kind==='human'){cls+=' human';icCls+=' ic-human';icon='&#128100;'}
+  else if(d.kind==='liability'){cls+=' liability';icCls+=' ic-human';icon='&#9888;'}
+  else{cls+=' agent';icCls+=' ic-agent';icon='&#129302;'}
+
+  let hdr='';
+  if(d.kind!=='sys'){
+    hdr='<div class="msg-hdr"><span class="'+icCls+'">'+icon+'</span>'+
+      '<span class="msg-name">'+esc(d.agent||'')+'</span>'+
+      (d.org?'<span class="msg-org">'+esc(d.org)+'</span>':'')+
+      (d.kind==='liability'?'<span class="liability-tag">LIABILITY</span>':'')+
+      '</div>';
+  }
+  const tid='mt'+Date.now()+Math.random();
+  div.className=cls;
+  div.innerHTML=hdr+'<div class="msg-text" id="'+tid+'"></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  if(d.typing&&d.content){
+    typeWords(tid,d.content);
+  }else{
+    $(tid).textContent=d.content||'';
+  }
+}
+
+function typeWords(id,text){
+  const el=$(id);if(!el)return;
+  const words=text.split(' ');let i=0;
+  el.innerHTML='<span class="cursor"></span>';
+  const iv=setInterval(()=>{
+    if(i>=words.length){clearInterval(iv);el.textContent=text;return}
+    el.innerHTML=esc(words.slice(0,i+1).join(' '))+'<span class="cursor"></span>';
+    i++;msgs.scrollTop=msgs.scrollHeight;
+  },55);
+}
+
+function doChain(d){
+  const div=document.createElement('div');
+  div.className='cev';
+  const hid='ch'+d.seq;
+  div.innerHTML='<div class="cev-top"><span class="cev-seq">#'+d.seq+'</span>'+
+    '<span class="cev-type">'+esc(d.eventType)+'</span></div>'+
+    '<div class="cev-agent">'+esc(d.agent)+(d.org?' &middot; '+esc(d.org):'')+'</div>'+
+    '<div class="cev-hash mono" id="'+hid+'">'+(d.hash?d.hash.substring(0,16)+'...':'')+'</div>'+
+    (d.prevHash&&d.prevHash!=='0'.repeat(64)?'<div class="cev-link mono">&larr; '+d.prevHash.substring(0,12)+'...</div>':'');
+  chain.appendChild(div);
+  chain.scrollTop=chain.scrollHeight;
+  if(d.hash)scramble(hid,d.hash);
+}
+
+function scramble(id,real){
+  const el=$(id);if(!el)return;
+  const hex='0123456789abcdef',show=real.substring(0,16)+'...';
+  let r=0;
+  const iv=setInterval(()=>{
+    if(r>=16){clearInterval(iv);el.textContent=show;return}
+    let s='';for(let i=0;i<16;i++)s+=i<r?show[i]:hex[Math.floor(Math.random()*16)];
+    el.textContent=s+'...';r++;
+  },35);
+}
+
+function doStatus(d){
+  const el=$('st-'+d.id);if(!el)return;
+  el.classList.remove('active','done');
+  if(d.state==='active')el.classList.add('active');
+  if(d.state==='done')el.classList.add('done');
+}
+
+function doCert(d){
+  $('c-issuer').textContent='Issuer: '+d.issuer;
+  $('c-events').textContent=d.events+' events in provenance chain';
+  $('c-hash').textContent=d.chainHash;
+  $('c-sig').textContent='Ed25519: '+d.signature;
+  $('c-valid').textContent='';
+  $('certov').classList.add('vis');
+}
+
+function doVerify(d){
+  const el=$('c-valid');
+  el.textContent=d.valid?'VERIFIED — Certificate is cryptographically valid':'INVALID';
+  el.style.color=d.valid?'var(--green)':'var(--red)';
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+</body>
+</html>
