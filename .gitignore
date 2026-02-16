@@ -3,6 +3,7 @@ node_modules/
 
 # Recording outputs (large binary files)
 recording/
+screenshots/
 artifacts/
 
 # Environment secrets
