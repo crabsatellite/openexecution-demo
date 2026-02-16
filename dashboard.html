@@ -52,7 +52,7 @@ border-left:3px solid var(--br);animation:slideL .4s ease}
 .msg.agent{border-left-color:var(--blue)}
 .msg.ai{border-left-color:var(--green)}
 .msg.human{border-left-color:var(--orange)}
-.msg.liability{border-left-color:var(--red);background:rgba(248,81,73,.06)}
+.msg.authorization{border-left-color:var(--orange);background:rgba(240,136,62,.06)}
 .msg-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
 .msg-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
 justify-content:center;font-size:12px;flex-shrink:0}
@@ -61,7 +61,7 @@ justify-content:center;font-size:12px;flex-shrink:0}
 .msg-icon.ic-human{background:var(--orange);color:#fff}
 .msg-name{font-size:13px;font-weight:600;color:var(--t1)}
 .msg-org{font-size:10px;color:var(--t2);background:var(--bg3);padding:1px 6px;border-radius:3px}
-.liability-tag{font-size:9px;font-weight:700;background:var(--red);color:#fff;
+.authorization-tag{font-size:9px;font-weight:700;background:var(--orange);color:#fff;
 padding:2px 6px;border-radius:3px;letter-spacing:.5px}
 .msg-text{font-size:13px;line-height:1.55;color:var(--t1)}
 .cursor{display:inline-block;width:2px;height:13px;background:var(--green);
@@ -124,18 +124,18 @@ padding:10px 28px;border-radius:8px;z-index:60;animation:fadeIn .5s ease}
 @keyframes certIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 
 /* Instruction Input Bar */
-.instr-bar{display:none;padding:12px 14px;background:var(--bg2);border-top:2px solid var(--red);
+.instr-bar{display:none;padding:12px 14px;background:var(--bg2);border-top:2px solid var(--orange);
 flex-direction:column;gap:8px;animation:slideL .4s ease}
 .instr-bar.vis{display:flex}
-.instr-label{font-size:12px;font-weight:700;color:var(--red)}
+.instr-label{font-size:12px;font-weight:700;color:var(--orange)}
 .instr-input{background:var(--bg);border:1px solid var(--br);border-radius:6px;color:var(--t1);
 padding:10px 12px;font-size:13px;line-height:1.5;resize:none;outline:none;
 font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:border-color .2s}
 .instr-input:focus{border-color:var(--orange)}
-.instr-btn{background:var(--red);color:#fff;border:none;border-radius:6px;
+.instr-btn{background:var(--orange);color:#fff;border:none;border-radius:6px;
 padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;align-self:flex-end;
 transition:background .2s;letter-spacing:.3px}
-.instr-btn:hover{background:#da3633}
+.instr-btn:hover{background:#e2761e}
 .instr-btn:disabled{opacity:.5;cursor:default}
 .instr-sent{font-size:12px;color:var(--green);font-weight:600;padding:8px 0;display:none}
 </style>
@@ -256,7 +256,7 @@ function doMsg(d){
   if(d.kind==='sys'){cls+=' sys'}
   else if(d.kind==='ai'){cls+=' ai';icCls+=' ic-ai';icon='&#129504;'}
   else if(d.kind==='human'){cls+=' human';icCls+=' ic-human';icon='&#128100;'}
-  else if(d.kind==='liability'){cls+=' liability';icCls+=' ic-human';icon='&#9888;'}
+  else if(d.kind==='authorization'){cls+=' authorization';icCls+=' ic-human';icon='&#128274;'}
   else{cls+=' agent';icCls+=' ic-agent';icon='&#129302;'}
 
   let hdr='';
@@ -264,7 +264,7 @@ function doMsg(d){
     hdr='<div class="msg-hdr"><span class="'+icCls+'">'+icon+'</span>'+
       '<span class="msg-name">'+esc(d.agent||'')+'</span>'+
       (d.org?'<span class="msg-org">'+esc(d.org)+'</span>':'')+
-      (d.kind==='liability'?'<span class="liability-tag">LIABILITY</span>':'')+
+      (d.kind==='authorization'?'<span class="authorization-tag">AUTHORIZED</span>':'')+
       '</div>';
   }
   const tid='mt'+Date.now()+Math.random();

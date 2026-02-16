@@ -160,7 +160,7 @@ function glmChat(sys, user) {
 // 2. HASH CHAIN (class Chain)
 //    - Appends events to a SHA-256 linked hash chain
 //    - Each event's hash depends on the previous event (tamper-evident)
-//    - Supports liability event marking with owner attribution
+//    - Supports authorization event marking with owner attribution
 //    - Chain resolution computes aggregate chain hash
 //    - Hash computation details: PROPRIETARY
 //
@@ -192,7 +192,7 @@ class Chain {
   // Actual implementation:
   //   - Computes SHA-256 hash over canonicalized event data
   //   - Links to previous event hash (or genesis hash for first event)
-  //   - Records liability attribution when opts.liability is true
+  //   - Records authorization attribution when opts.authorization is true
   //   - Pushes chain update to SSE clients
   // Hash input structure and field ordering: PROPRIETARY
   append(type, agent, org, payload, opts = {}) {
@@ -204,7 +204,7 @@ class Chain {
     const ev = {
       sequence: seq, event_type: type, agent_name: agent, organization: org,
       timestamp: ts, payload, event_hash: hash, prev_hash: prev,
-      ...(opts.liability ? { liability_event: true, owner_user_id: opts.ownerId || 'owner-1' } : {}),
+      ...(opts.authorization ? { authorization_event: true, owner_user_id: opts.ownerId || 'owner-1' } : {}),
     };
     this.events.push(ev);
     push({ type: 'chain', seq, eventType: type, agent, org, hash, prevHash: prev });
@@ -373,17 +373,17 @@ async function runDemo() {
   push({ type: 'instruction_ack' });
   await sleep(500);
 
-  push({ type: 'msg', kind: 'liability', agent: 'Project Owner', org: 'CyberSafe Inc.',
+  push({ type: 'msg', kind: 'authorization', agent: 'Project Owner', org: 'CyberSafe Inc.',
     content: `"${humanInstruction}"` });
 
   chain.append('instruction_received', 'human-owner', 'CyberSafe Inc.', {
     instruction: humanInstruction,
     scope: 'src/auth.js',
-  }, { liability: true, ownerId: 'owner-ciso-1' });
+  }, { authorization: true, ownerId: 'owner-ciso-1' });
 
   // Human instruction comment on GitHub
   await githubApi('POST', `/repos/${REPO_OWNER}/${REPO_NAME}/issues/${issueNum}/comments`, {
-    body: `## Human Instruction — LIABILITY EVENT\n\n**From**: Project Owner (CyberSafe Inc.)\n\n> ${humanInstruction}\n\nThis instruction is recorded as a **liability event** in the OpenExecution provenance chain. The human owner accepts responsibility for authorizing this action.\n\n---\n*Recorded via OpenExecution Execution Ledger*`,
+    body: `## Human Instruction — Authorization Event\n\n**From**: Project Owner (CyberSafe Inc.)\n\n> ${humanInstruction}\n\nThis instruction is recorded as an **authorization event** in the OpenExecution provenance chain. The human owner's directive is permanently attributed.\n\n---\n*Recorded via OpenExecution Execution Ledger*`,
   });
   await sleep(2000);
 
@@ -472,12 +472,12 @@ async function runDemo() {
     review_summary: reviewText.substring(0, 150),
   });
 
-  // pr_approved is a liability event per OpenExecution spec — AI takes responsibility for approval
+  // pr_approved is an authorization event per OpenExecution spec — AI approval decision is recorded
   if (aiApproved) {
     chain.append('pr_approved', 'review-bot', 'CyberSafe Inc.', {
       pr_number: prNum, approved_by: 'review-bot (GLM-4)',
       reason: 'Parameterized queries correctly mitigate SQL injection risk',
-    }, { liability: true, ownerId: 'review-bot-1' });
+    }, { authorization: true, ownerId: 'review-bot-1' });
   }
   await sleep(1500);
 
