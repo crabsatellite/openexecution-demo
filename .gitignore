@@ -3,8 +3,15 @@ node_modules/
 
 # Recording outputs (large binary files)
 recording/
+recording-infra-*/
+recording-live-*/
 screenshots/
 artifacts/
+artifacts-v2/
+
+# Debug/test screenshots
+test-*.png
+test-css.js
 
 # Environment secrets
 .env

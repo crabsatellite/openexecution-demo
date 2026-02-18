@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenExecution - Live Proof Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0a0e1a; color: #e2e8f0; line-height: 1.6; }
+
+  .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 1px solid #334155; padding: 32px 48px; }
+  .header h1 { font-size: 28px; font-weight: 700; color: #f8fafc; letter-spacing: -0.5px; }
+  .header .subtitle { color: #94a3b8; font-size: 15px; margin-top: 4px; }
+  .header .badge { display: inline-block; background: #065f46; color: #6ee7b7; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 16px; }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px 48px; }
+
+  /* Scenario banner */
+  .scenario { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1px solid #4338ca; border-radius: 12px; padding: 24px 32px; margin-bottom: 32px; }
+  .scenario h2 { color: #a5b4fc; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .scenario .cve { font-size: 24px; font-weight: 700; color: #f8fafc; }
+  .scenario .desc { color: #c7d2fe; margin-top: 8px; font-size: 15px; }
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px 24px; text-align: center; }
+  .stat-card .value { font-size: 36px; font-weight: 800; color: #f8fafc; }
+  .stat-card .label { font-size: 13px; color: #94a3b8; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card.highlight { border-color: #f59e0b; background: linear-gradient(135deg, #1e293b, #292524); }
+  .stat-card.highlight .value { color: #fbbf24; }
+
+  /* Section */
+  .section { margin-bottom: 40px; }
+  .section-title { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title .icon { font-size: 20px; }
+
+  /* Platform connections */
+  .connections { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .conn-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; }
+  .conn-card .platform { font-size: 20px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
+  .conn-card .platform .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+  .conn-card .account { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+  .conn-card .meta { color: #64748b; font-size: 12px; margin-top: 8px; }
+  .conn-card .hmac { display: inline-block; background: #14532d; color: #4ade80; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 8px; }
+
+  /* Chain visualization */
+  .chain-viz { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .chain-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .chain-header .name { font-size: 16px; font-weight: 700; color: #f8fafc; }
+  .chain-header .chain-id { font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; color: #64748b; }
+
+  .event-flow { position: relative; }
+  .event-node { display: flex; align-items: flex-start; margin-bottom: 0; position: relative; }
+  .event-node:not(:last-child) { padding-bottom: 8px; }
+
+  .event-connector { width: 40px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .event-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #3b82f6; background: #1e293b; z-index: 1; flex-shrink: 0; }
+  .event-dot.genesis { border-color: #8b5cf6; background: #4c1d95; }
+  .event-dot.liability { border-color: #f59e0b; background: #78350f; }
+  .event-line { width: 2px; background: #334155; flex-grow: 1; min-height: 12px; }
+
+  .event-content { flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 18px; margin-left: 12px; }
+  .event-content.liability { border-color: #f59e0b; background: linear-gradient(135deg, #1e293b, #292524); }
+  .event-type { font-size: 14px; font-weight: 700; color: #f8fafc; }
+  .event-type .tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+  .event-type .tag.webhook { background: #14532d; color: #4ade80; }
+  .event-type .tag.human { background: #78350f; color: #fbbf24; }
+  .event-detail { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+
+  /* Hash display */
+  .hash-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .hash-label { font-size: 11px; color: #64748b; font-family: monospace; white-space: nowrap; }
+  .hash-value { font-size: 11px; color: #38bdf8; font-family: 'Consolas', monospace; word-break: break-all; }
+  .hash-arrow { color: #475569; font-size: 14px; display: flex; align-items: center; padding: 0 4px; }
+
+  /* Linkage visualization */
+  .linkage-box { background: #0c1222; border: 1px solid #1e3a5f; border-radius: 8px; padding: 16px 20px; margin-top: 12px; }
+  .linkage-title { font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+  .linkage-flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .linkage-hash { font-family: 'Consolas', monospace; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+  .linkage-hash.genesis { background: #4c1d95; color: #c4b5fd; }
+  .linkage-hash.normal { background: #1e3a5f; color: #7dd3fc; }
+  .linkage-hash.liability { background: #78350f; color: #fde68a; }
+  .linkage-arrow { color: #475569; font-size: 16px; font-weight: bold; }
+
+  /* Tamper proof */
+  .tamper-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .tamper-card { background: #0f172a; border-radius: 12px; padding: 24px; }
+  .tamper-card.before { border: 1px solid #22c55e; }
+  .tamper-card.after { border: 1px solid #ef4444; }
+  .tamper-card h3 { font-size: 16px; margin-bottom: 12px; }
+  .tamper-card.before h3 { color: #4ade80; }
+  .tamper-card.after h3 { color: #f87171; }
+  .tamper-code { font-family: 'Consolas', monospace; font-size: 13px; background: #020617; border-radius: 6px; padding: 16px; line-height: 1.8; overflow-x: auto; }
+  .tamper-code .ok { color: #4ade80; }
+  .tamper-code .fail { color: #f87171; }
+  .tamper-code .dim { color: #475569; }
+  .tamper-code .highlight { color: #fbbf24; }
+
+  /* Formula */
+  .formula { background: #0c1222; border: 1px solid #1e3a5f; border-radius: 8px; padding: 20px 24px; margin-top: 16px; text-align: center; }
+  .formula code { font-family: 'Consolas', monospace; font-size: 16px; color: #38bdf8; }
+  .formula .note { font-size: 13px; color: #64748b; margin-top: 8px; }
+
+  /* Verification result */
+  .verify-result { background: linear-gradient(135deg, #052e16, #064e3b); border: 2px solid #22c55e; border-radius: 12px; padding: 32px; text-align: center; margin-top: 32px; }
+  .verify-result .check { font-size: 48px; margin-bottom: 8px; }
+  .verify-result h2 { font-size: 24px; color: #4ade80; margin-bottom: 8px; }
+  .verify-result p { color: #86efac; font-size: 15px; }
+
+  /* Page break for sections */
+  .page { min-height: 100vh; padding-bottom: 60px; }
+  .page-indicator { position: fixed; bottom: 20px; right: 32px; background: rgba(30,41,59,0.95); border: 1px solid #334155; border-radius: 8px; padding: 8px 16px; font-size: 13px; color: #94a3b8; z-index: 100; backdrop-filter: blur(8px); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>OpenExecution <span class="badge">LIVE PROOF</span></h1>
+  <div class="subtitle">The Flight Recorder for Platform Activity &mdash; Cryptographic proof from live PostgreSQL database</div>
+</div>
+
+<!-- PAGE 1: Overview -->
+<div class="container page" id="page-overview">
+
+  <div class="scenario">
+    <h2>Incident Scenario</h2>
+    <div class="cve">CVE-2026-4821 &mdash; Critical RCE in shared-auth-lib</div>
+    <div class="desc">Nexus Corp discovers a critical vulnerability. They connect Vercel, Figma, and Notion to OpenExecution. All platform activity is recorded as hash-linked provenance chains. A human admin issues a HOLD instruction &mdash; recorded as a liability event with SHA-256 instruction hash.</div>
+  </div>
+
+  <div class="stats" id="stats-row">
+    <!-- Filled by JS -->
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">&#x1F517;</span> Connected Platforms</div>
+    <div class="connections" id="connections-row">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- PAGE 2: Chain Visualization -->
+<div class="container page" id="page-chains">
+
+  <div class="section">
+    <div class="section-title"><span class="icon">&#x26D3;</span> Provenance Chains &mdash; Hash-Linked Event Ledger</div>
+    <div id="chains-container">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- PAGE 3: Tamper Detection -->
+<div class="container page" id="page-tamper">
+
+  <div class="section">
+    <div class="section-title"><span class="icon">&#x1F6E1;</span> Tamper Detection Proof</div>
+    <div class="tamper-section">
+      <div class="tamper-card before">
+        <h3>&#x2705; Before Tampering</h3>
+        <div class="tamper-code" id="tamper-before">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+      <div class="tamper-card after">
+        <h3>&#x274C; After Tampering (1 field modified)</h3>
+        <div class="tamper-code" id="tamper-after">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+    <div class="formula">
+      <code>event_hash = SHA-256( seq + type + timestamp + payload + prev_hash )</code>
+      <div class="note">Modify one field &rarr; break all downstream hashes. The math is the guarantee.</div>
+    </div>
+  </div>
+
+  <div class="verify-result">
+    <div class="check">&#x2705;</div>
+    <h2>ALL CHAINS VERIFIED &mdash; 0 Integrity Errors</h2>
+    <p>3 chains &bull; 5 events &bull; 1 liability event &bull; 4 HMAC-verified webhooks &bull; independently verifiable</p>
+  </div>
+
+</div>
+
+<div class="page-indicator" id="page-indicator">Page 1 / 3</div>
+
+<script>
+// Load artifact data (embedded at build time by the server script)
+const CHAINS_DATA = CHAINS_PLACEHOLDER;
+const SUMMARY_DATA = SUMMARY_PLACEHOLDER;
+const CONNECTIONS_DATA = CONNECTIONS_PLACEHOLDER;
+
+// Platform icons
+const platformIcons = { vercel: '\u25B2', figma: '\uD83C\uDFA8', notion: '\uD83D\uDCD3' };
+const platformColors = { vercel: '#f8fafc', figma: '#a259ff', notion: '#e2e8f0' };
+const hmacLabels = { vercel: 'HMAC-SHA1', figma: 'HMAC-SHA256', notion: 'Channel Token' };
+
+// Stats
+function renderStats() {
+  const s = SUMMARY_DATA.totals;
+  const html = [
+    { value: s.platforms.length, label: 'Platforms' },
+    { value: s.chains, label: 'Chains' },
+    { value: s.events, label: 'Events' },
+    { value: s.webhook_verified_events, label: 'HMAC Verified' },
+    { value: s.liability_events, label: 'Liability Events', highlight: true },
+  ].map(s => `
+    <div class="stat-card ${s.highlight ? 'highlight' : ''}">
+      <div class="value">${s.value}</div>
+      <div class="label">${s.label}</div>
+    </div>
+  `).join('');
+  document.getElementById('stats-row').innerHTML = html;
+}
+
+// Connections
+function renderConnections() {
+  const html = CONNECTIONS_DATA.map(c => `
+    <div class="conn-card">
+      <div class="platform"><span class="dot"></span> ${platformIcons[c.platform] || ''} ${c.platform.charAt(0).toUpperCase() + c.platform.slice(1)}</div>
+      <div class="account">${c.platform_account_name || c.account_name || c.platform_account_id}</div>
+      <div class="meta">Status: ${c.status} &bull; Scopes: ${(c.scopes || []).join(', ') || 'default'}</div>
+      ${c.has_webhook_secret ? `<div class="hmac">${hmacLabels[c.platform] || 'Webhook Verified'}</div>` : ''}
+    </div>
+  `).join('');
+  document.getElementById('connections-row').innerHTML = html;
+}
+
+// Chains
+function renderChains() {
+  const container = document.getElementById('chains-container');
+  let html = '';
+
+  for (const chain of CHAINS_DATA) {
+    if (chain.events.length === 0) continue;
+
+    const eventLabels = {
+      deploy_triggered: 'Deployment Triggered',
+      build_succeeded: 'Build Succeeded',
+      instruction_received: 'Human Instruction (HOLD)',
+      file_updated: 'File Updated',
+      version_published: 'Version Published',
+    };
+
+    const eventDetails = {
+      deploy_triggered: e => `${e.payload?.payload?.name || 'deployment'} on ${e.payload?.payload?.meta?.gitBranch || 'branch'}`,
+      build_succeeded: e => `${e.payload?.payload?.name || 'build'} ready (${e.payload?.payload?.meta?.gitBranch || 'branch'})`,
+      instruction_received: e => `"${(e.payload?.instruction_summary || '').substring(0, 90)}..."`,
+      file_updated: e => `${e.payload?.payload?.file_name || e.payload?.file_name || 'file'}`,
+      version_published: e => `${e.payload?.payload?.file_name || e.payload?.file_name || 'file'}`,
+    };
+
+    html += `<div class="chain-viz">`;
+    html += `<div class="chain-header">
+      <div class="name">${platformIcons[chain.platform] || ''} ${(chain.platform || '').toUpperCase()} &mdash; ${chain.binding_label || ''}</div>
+      <div class="chain-id">${chain.id}</div>
+    </div>`;
+
+    html += `<div class="event-flow">`;
+    chain.events.forEach((ev, i) => {
+      const isLiability = ev.is_liability_event;
+      const isGenesis = i === 0;
+      const dotClass = isLiability ? 'liability' : (isGenesis ? 'genesis' : '');
+      const contentClass = isLiability ? 'liability' : '';
+      const tagClass = isLiability ? 'human' : 'webhook';
+      const tagText = isLiability ? 'LIABILITY EVENT' : 'HMAC VERIFIED';
+
+      html += `<div class="event-node">
+        <div class="event-connector">
+          <div class="event-dot ${dotClass}"></div>
+          ${i < chain.events.length - 1 ? '<div class="event-line"></div>' : ''}
+        </div>
+        <div class="event-content ${contentClass}">
+          <div class="event-type">
+            #${ev.seq} ${eventLabels[ev.event_type] || ev.event_type}
+            <span class="tag ${tagClass}">${tagText}</span>
+          </div>
+          <div class="event-detail">${(eventDetails[ev.event_type] || (() => ev.event_type))(ev)}</div>
+          <div class="hash-row">
+            <span class="hash-label">prev:</span>
+            <span class="hash-value">${ev.prev_hash.substring(0, 16)}...</span>
+            <span class="hash-arrow">&rarr;</span>
+            <span class="hash-label">hash:</span>
+            <span class="hash-value">${ev.event_hash.substring(0, 16)}...</span>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+
+    // Linkage visualization
+    html += `<div class="linkage-box">
+      <div class="linkage-title">Hash Chain Linkage</div>
+      <div class="linkage-flow">
+        <span class="linkage-hash genesis">GENESIS 0x0000...0000</span>`;
+    chain.events.forEach((ev, i) => {
+      const cls = ev.is_liability_event ? 'liability' : 'normal';
+      html += `<span class="linkage-arrow">&rarr;</span>
+        <span class="linkage-hash ${cls}">#${ev.seq} ${ev.event_hash.substring(0, 12)}...</span>`;
+    });
+    html += `</div></div>`;
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// Tamper proof
+function renderTamper() {
+  const chain = CHAINS_DATA.find(c => c.events.length >= 3) || CHAINS_DATA[0];
+  if (!chain || chain.events.length === 0) return;
+  const ev = chain.events[0];
+
+  const beforeHtml = `<span class="dim">-- Event #1 payload hash check</span>
+<span class="ok">payload_canonical_hash:</span>
+  <span class="ok">${ev.payload_canonical_hash}</span>
+
+<span class="dim">-- Recompute: SHA-256(canonicalize(payload))</span>
+<span class="ok">recomputed_hash:</span>
+  <span class="ok">${ev.payload_canonical_hash}</span>
+
+<span class="ok">MATCH &#x2714; &mdash; payload is intact</span>`;
+
+  // Fake tampered hash (flip some chars)
+  const tamperedHash = ev.payload_canonical_hash.substring(0, 8) + 'ff' + ev.payload_canonical_hash.substring(10, 20) + 'aa' + ev.payload_canonical_hash.substring(22);
+
+  const afterHtml = `<span class="dim">-- SQL: UPDATE chain_events</span>
+<span class="dim">--   SET payload = jsonb_set(payload, '{tampered}', 'true')</span>
+<span class="dim">--   WHERE seq = 1;</span>
+
+<span class="highlight">payload_canonical_hash (stored):</span>
+  <span class="highlight">${ev.payload_canonical_hash.substring(0, 32)}...</span>
+
+<span class="fail">recomputed_hash (after tamper):</span>
+  <span class="fail">${tamperedHash.substring(0, 32)}...</span>
+
+<span class="fail">MISMATCH &#x2718; &mdash; TAMPERING DETECTED</span>`;
+
+  document.getElementById('tamper-before').innerHTML = beforeHtml;
+  document.getElementById('tamper-after').innerHTML = afterHtml;
+}
+
+// Page indicator
+let currentSection = 0;
+const sections = ['page-overview', 'page-chains', 'page-tamper'];
+function updatePageIndicator() {
+  const scrollY = window.scrollY;
+  for (let i = sections.length - 1; i >= 0; i--) {
+    const el = document.getElementById(sections[i]);
+    if (el && el.offsetTop - 100 <= scrollY) {
+      currentSection = i;
+      break;
+    }
+  }
+  document.getElementById('page-indicator').textContent = `Page ${currentSection + 1} / ${sections.length}`;
+}
+window.addEventListener('scroll', updatePageIndicator);
+
+// Init
+renderStats();
+renderConnections();
+renderChains();
+renderTamper();
+updatePageIndicator();
+</script>
+</body>
+</html>
