@@ -25,6 +25,13 @@ const LANG = process.env.DEMO_LANG || 'en';
 const BASE_URL = process.env.PITCH_DECK_URL || 'http://localhost:5173';
 const OUTPUT_DIR = path.join(__dirname, `recording-pitch-deck-${LANG}`);
 
+// Live Vercel deployment URLs (for deployment evidence section)
+const VERCEL_URLS = {
+  en: 'https://pitch-deck-en.vercel.app',
+  zh: 'https://pitch-deck-zh.vercel.app',
+  ja: 'https://pitch-deck-ja.vercel.app',
+};
+
 // ── Helpers ──
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -129,6 +136,31 @@ const SUBTITLES = {
     en: 'Multi-platform adapters connect to GitHub, Vercel, Figma — one unified provenance view.',
     zh: '多平台适配器连接 GitHub、Vercel、Figma — 统一的溯源视图。',
     ja: 'マルチプラットフォームアダプターがGitHub、Vercel、Figmaを接続 — 統一プロベナンスビュー。',
+  },
+  vercelIntro: {
+    en: 'Live Deployment Evidence: 3 dedicated Vercel instances — one per language.',
+    zh: '线上部署证据：3 个独立 Vercel 实例 — 每种语言一个。',
+    ja: 'ライブデプロイ証拠：3つの専用Vercelインスタンス — 言語ごとに1つ。',
+  },
+  vercelEN: {
+    en: 'English version — pitch-deck-en.vercel.app — language locked, no toggle.',
+    zh: '英文版 — pitch-deck-en.vercel.app — 语言锁定，无切换按钮。',
+    ja: '英語版 — pitch-deck-en.vercel.app — 言語ロック済み、切り替えなし。',
+  },
+  vercelZH: {
+    en: 'Chinese version — pitch-deck-zh.vercel.app — language locked, no toggle.',
+    zh: '中文版 — pitch-deck-zh.vercel.app — 语言锁定，无切换按钮。',
+    ja: '中国語版 — pitch-deck-zh.vercel.app — 言語ロック済み、切り替えなし。',
+  },
+  vercelJA: {
+    en: 'Japanese version — pitch-deck-ja.vercel.app — language locked, no toggle.',
+    zh: '日文版 — pitch-deck-ja.vercel.app — 语言锁定，无切换按钮。',
+    ja: '日本語版 — pitch-deck-ja.vercel.app — 言語ロック済み、切り替えなし。',
+  },
+  vercelProof: {
+    en: 'Three languages, three instances, zero code duplication. Synced from one master repo.',
+    zh: '三种语言、三个实例、零代码重复。从一个主仓库同步。',
+    ja: '3言語、3インスタンス、コード重複ゼロ。1つのマスターリポジトリから同期。',
   },
   closing: {
     en: 'Thank you for watching. OpenExecution — the behavioral ledger for AI agents.',
@@ -413,6 +445,50 @@ async function main() {
       await sleep(1500);
       await screenshot(page, 'demo-platform-video');
     }
+
+    // ── LIVE DEPLOYMENT EVIDENCE ──
+    console.log('\n  🌐 Live Deployment Evidence...\n');
+
+    // Intro card for this section
+    await page.goto('about:blank');
+    await showSubtitle(page, sub('vercelIntro'));
+    await sleep(3000);
+    await screenshot(page, 'vercel-intro');
+    await clearSubtitle(page);
+
+    // Visit each Vercel deployment
+    const vercelEntries = [
+      { lang: 'en', url: VERCEL_URLS.en, key: 'vercelEN', name: 'vercel-en' },
+      { lang: 'zh', url: VERCEL_URLS.zh, key: 'vercelZH', name: 'vercel-zh' },
+      { lang: 'ja', url: VERCEL_URLS.ja, key: 'vercelJA', name: 'vercel-ja' },
+    ];
+
+    for (const entry of vercelEntries) {
+      console.log(`    → Visiting ${entry.url}`);
+      await page.goto(entry.url, { waitUntil: 'networkidle', timeout: 30000 });
+      await sleep(3000); // Allow React SPA to render
+
+      await showSubtitle(page, sub(entry.key));
+      await sleep(2500);
+      await screenshot(page, `${entry.name}-cover`);
+
+      // Scroll down to show traction slide (evidence of milestones)
+      const slides = await page.$$('.slide');
+      if (slides.length >= 9) {
+        await slides[8].scrollIntoViewIfNeeded(); // Slide 9 = Traction
+        await sleep(1500);
+        await screenshot(page, `${entry.name}-traction`);
+      }
+
+      await clearSubtitle(page);
+      await sleep(500);
+    }
+
+    // Summary subtitle
+    await showSubtitle(page, sub('vercelProof'));
+    await sleep(3000);
+    await screenshot(page, 'vercel-proof');
+    await clearSubtitle(page);
 
     // ── CLOSING ──
     console.log('\n  🎬 Closing...\n');
