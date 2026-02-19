@@ -5,6 +5,7 @@ node_modules/
 recording/
 recording-infra-*/
 recording-live-*/
+recording-pitch-deck-*/
 screenshots/
 artifacts/
 artifacts-v2/
