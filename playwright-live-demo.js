@@ -133,6 +133,23 @@ const SUBTITLES = {
     zh: 'AI 智能体的第三方行为账本 — 将问责落实于基础设施层。',
     ja: 'AIエージェントのための第三者行動台帳 — インフラレベルで説明責任を実現。',
   },
+
+  // Vercel Pitch Deck Evidence
+  vercelEn: {
+    en: 'Real Vercel deployment — English pitch deck. Deployment events are captured as provenance evidence.',
+    zh: '真实 Vercel 部署 — 英文版 Pitch Deck。部署事件被捕获为溯源证据。',
+    ja: '実際のVercelデプロイ — 英語版ピッチデック。デプロイイベントはプロベナンス証拠として記録。',
+  },
+  vercelZh: {
+    en: 'Real Vercel deployment — Chinese pitch deck. Multi-language deployment monitoring.',
+    zh: '真实 Vercel 部署 — 中文版 Pitch Deck。多语言部署监控。',
+    ja: '実際のVercelデプロイ — 中国語版ピッチデック。多言語デプロイ監視。',
+  },
+  vercelJa: {
+    en: 'Real Vercel deployment — Japanese pitch deck. Three languages, three deployments, one ledger.',
+    zh: '真实 Vercel 部署 — 日文版 Pitch Deck。三种语言、三个部署、一个账本。',
+    ja: '実際のVercelデプロイ — 日本語版ピッチデック。3言語、3デプロイ、1つの台帳。',
+  },
 };
 
 function sub(key) {
@@ -225,19 +242,19 @@ async function clearSubtitle(page) {
 // ── Intro Title Card ── (full-screen overlay before the demo starts)
 
 const INTRO_TITLE = {
-  en: 'Scenario 2 / 2',
-  zh: '场景 2 / 2',
-  ja: 'シナリオ 2 / 2',
+  en: 'LIVE DEMO',
+  zh: '现场演示',
+  ja: 'ライブデモ',
 };
 const INTRO_HEADING = {
-  en: 'Platform API Integration',
-  zh: '平台 API 集成接入',
-  ja: 'プラットフォームAPI統合',
+  en: 'From Zero to Full Operation',
+  zh: '从零到完整运行',
+  ja: 'ゼロから完全稼働まで',
 };
 const INTRO_DESC = {
-  en: 'Users connect to the OpenExecution platform via API, binding GitHub and Vercel workspaces.\nReal webhook events flow in — every action is automatically recorded\ninto tamper-evident provenance chains with SHA-256 integrity hashes.',
-  zh: '用户通过 API 接入 OpenExecution 平台，绑定 GitHub 与 Vercel 工作区。\n真实 Webhook 事件持续流入 — 每个操作都被自动记录\n至附有 SHA-256 完整性哈希的防篡改溯源链中。',
-  ja: 'ユーザーがAPI経由でOpenExecutionプラットフォームに接続し、GitHubとVercelのワークスペースをバインド。\n実際のWebhookイベントが流入 — すべてのアクションが自動的に\nSHA-256整合性ハッシュ付きの改ざん防止プロベナンスチェーンに記録。',
+  en: 'Starting from an empty database — register a user, connect GitHub and Vercel,\nbind workspaces, and watch real webhook events flow in as tamper-evident\nprovenance records with Ed25519 signatures and SHA-256 integrity hashes.',
+  zh: '从空白数据库开始 — 注册用户、连接 GitHub 和 Vercel 工作区，\n真实 Webhook 事件持续流入 — 每个操作都被自动记录\n至附有 Ed25519 签名与 SHA-256 完整性哈希的防篡改溯源链中。',
+  ja: '空のデータベースから開始 — ユーザー登録、GitHubとVercelを接続し、\nワークスペースをバインド。実際のWebhookイベントが流入 —\nEd25519署名とSHA-256整合性ハッシュによる改ざん防止プロベナンス記録として自動記録。',
 };
 
 async function showIntroCard(page, title, heading, desc) {
@@ -489,15 +506,57 @@ ${'='.repeat(62)}
 
 
   // ╔═══════════════════════════════════════════════╗
+  // ║  ACT II-B — REAL VERCEL DEPLOYMENTS (EVIDENCE) ║
+  // ╚═══════════════════════════════════════════════╝
+
+  console.log('\n\u2501\u2501\u2501 ACT II-B: VERCEL DEPLOYMENT EVIDENCE \u2501\u2501\u2501\n');
+
+  // ════════════════════════════════════════
+  //  Scene 7: Vercel — English Pitch Deck
+  // ════════════════════════════════════════
+  console.log('[Scene 7] Vercel — English Pitch Deck');
+  await page.goto('https://pitch-deck-en.vercel.app', { ...GOTO, timeout: 30000 });
+  await page.waitForTimeout(3000);
+  await showSubtitle(page, sub('vercelEn'), 0);
+  await page.waitForTimeout(1500);
+  await screenshot(page, 'vercel-en');
+  await clearSubtitle(page);
+
+
+  // ════════════════════════════════════════
+  //  Scene 8: Vercel — Chinese Pitch Deck
+  // ════════════════════════════════════════
+  console.log('[Scene 8] Vercel — Chinese Pitch Deck');
+  await page.goto('https://pitch-deck-zh.vercel.app', { ...GOTO, timeout: 30000 });
+  await page.waitForTimeout(3000);
+  await showSubtitle(page, sub('vercelZh'), 0);
+  await page.waitForTimeout(1500);
+  await screenshot(page, 'vercel-zh');
+  await clearSubtitle(page);
+
+
+  // ════════════════════════════════════════
+  //  Scene 9: Vercel — Japanese Pitch Deck
+  // ════════════════════════════════════════
+  console.log('[Scene 9] Vercel — Japanese Pitch Deck');
+  await page.goto('https://pitch-deck-ja.vercel.app', { ...GOTO, timeout: 30000 });
+  await page.waitForTimeout(3000);
+  await showSubtitle(page, sub('vercelJa'), 0);
+  await page.waitForTimeout(1500);
+  await screenshot(page, 'vercel-ja');
+  await clearSubtitle(page);
+
+
+  // ╔═══════════════════════════════════════════════╗
   // ║  ACT III — PLATFORM RECORDS                    ║
   // ╚═══════════════════════════════════════════════╝
 
   console.log('\n\u2501\u2501\u2501 ACT III: PLATFORM RECORDS \u2501\u2501\u2501\n');
 
   // ════════════════════════════════════════
-  //  Scene 7: Project Workspaces — Audit Events
+  //  Scene 10: Project Workspaces — Audit Events
   // ════════════════════════════════════════
-  console.log('[Scene 7] Project Workspaces');
+  console.log('[Scene 10] Project Workspaces');
   let projectTabsLoaded = false;
   if (PROJECT_ID) {
     await page.goto(`${FRONTEND_URL}/projects/${PROJECT_ID}`, GOTO);
@@ -524,9 +583,9 @@ ${'='.repeat(62)}
 
 
   // ════════════════════════════════════════
-  //  Scene 8: Project Audit Trail
+  //  Scene 11: Project Audit Trail
   // ════════════════════════════════════════
-  console.log('[Scene 8] Project Audit Trail');
+  console.log('[Scene 11] Project Audit Trail');
   if (PROJECT_ID && projectTabsLoaded) {
     const atText = LANG === 'zh' ? '审计追踪' : LANG === 'ja' ? '監査証跡' : 'Audit Trail';
     await page.locator('[role="tab"]').filter({ hasText: atText }).click();
@@ -545,9 +604,9 @@ ${'='.repeat(62)}
 
 
   // ════════════════════════════════════════
-  //  Scene 9: Provenance Chains
+  //  Scene 12: Provenance Chains
   // ════════════════════════════════════════
-  console.log('[Scene 9] Provenance Chains');
+  console.log('[Scene 12] Provenance Chains');
   await page.goto(`${FRONTEND_URL}/dashboard/provenance`, GOTO);
   await page.waitForTimeout(3000);
   await showSubtitle(page, sub('provenanceChains'), 0);
@@ -581,9 +640,9 @@ ${'='.repeat(62)}
   console.log('\n\u2501\u2501\u2501 ACT IV: RETURN TO DASHBOARD \u2501\u2501\u2501\n');
 
   // ════════════════════════════════════════
-  //  Scene 10: Mission Control — Summary
+  //  Scene 13: Mission Control — Summary
   // ════════════════════════════════════════
-  console.log('[Scene 10] Mission Control — Summary');
+  console.log('[Scene 13] Mission Control — Summary');
   await page.goto(`${FRONTEND_URL}/`, GOTO);
   await page.waitForTimeout(3000);
   await showSubtitle(page, sub('missionControlAfter'), 0);
@@ -599,9 +658,9 @@ ${'='.repeat(62)}
   console.log('\n\u2501\u2501\u2501 EPILOGUE \u2501\u2501\u2501\n');
 
   // ════════════════════════════════════════
-  //  Scene 11: Landing Page
+  //  Scene 14: Landing Page
   // ════════════════════════════════════════
-  console.log('[Scene 11] Landing Page');
+  console.log('[Scene 14] Landing Page');
   await page.goto(`${FRONTEND_URL}/landing`, GOTO);
   await page.waitForTimeout(2000);
   await showSubtitle(page, sub('landingHero'), 0);

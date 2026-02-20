@@ -215,13 +215,14 @@ async function main() {
   console.log('  STEP 1: Check Prerequisites');
   console.log('-'.repeat(70));
 
-  const dockerCheck = exec('docker ps --format "{{.Names}}" 2>/dev/null', { ignoreError: true });
-  if (!dockerCheck) {
+  const dockerVersion = exec('docker info --format "{{.ServerVersion}}" 2>/dev/null', { ignoreError: true });
+  if (!dockerVersion) {
     console.error('  FATAL: Docker is not running. Start Docker Desktop first.');
     process.exit(1);
   }
-  log('✓', 'Docker is running');
+  log('✓', `Docker is running (v${dockerVersion.trim()})`);
 
+  const dockerCheck = exec('docker ps --format "{{.Names}}" 2>/dev/null', { ignoreError: true }) || '';
   const runningContainers = dockerCheck.trim().split('\n');
   if (!runningContainers.includes('oe-postgres')) {
     const allContainers = exec('docker ps -a --format "{{.Names}}" 2>/dev/null', { ignoreError: true }) || '';
